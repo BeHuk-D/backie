@@ -5,6 +5,7 @@ mod hash;
 use std::collections::HashMap;
 use std::path::Path;
 use clap::Parser;
+use colour::yellow;
 use crate::file::{copy_files, go_to_dir};
 use crate::hash::compute_file_hash;
 use crate::manifest::{create_manifest, extract_manifest};
@@ -35,11 +36,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let target_manifest = extract_manifest(target_dir)?;
-    
+
     copy_files(target_manifest, &sources_manifest, source_dir, target_dir)?;
 
     create_manifest(&sources_manifest, target_dir)?;
-    println!("[MANAGER] Манифест сохранён в {}", target_dir.join("manifest.json").display());
+    yellow!("[MANAGER] "); println!("Манифест сохранён в {}", target_dir.join("manifest.json").display());
 
     Ok(())
 }

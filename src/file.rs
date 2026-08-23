@@ -1,6 +1,7 @@
 use std::{fs, io};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use colour::{green, yellow};
 
 pub fn clear_dir(path: &Path) -> io::Result<()> {
     if path.exists() {
@@ -26,7 +27,7 @@ pub fn move_files(source_dir: &Path, target_dir: &Path) -> Result<(), Box<dyn st
         }
 
         fs::copy(file_path, &target_path)?;
-        println!("[FILES] Копирование: {}", relative_path.display());
+        green!("[FILES] "); println!("Копирование: {}", relative_path.display());
     }
 
     Ok(())
@@ -67,15 +68,15 @@ pub fn copy_files(target_manifest:  Option<HashMap<String, String>>, sources_man
                     }
 
                     fs::copy(file_path, &target_path)?;
-                    println!("[FILES] Скопирован: {}", relative_path.display());
+                    green!("[FILES] "); println!("Скопирован: {}", relative_path.display());
                 }
                 else {
-                    println!("[MANAGER] Копирование не требуется");
+                    yellow!("[MANAGER] "); println!("Копирование не требуется");
                 }
             }
         }
         None => {
-            println!("[MANAGER] Копируем все файлы...");
+            yellow!("[MANAGER] "); println!("Копируем все файлы...");
             clear_dir(target_dir)?;
             move_files(source_dir, target_dir)?;
         }
