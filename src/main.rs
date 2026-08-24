@@ -23,8 +23,24 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
+    if Path::new(&args.source) == Path::new(&args.target) {
+        return Err(format!(
+            "source и target указывают на один и тот же путь ({}) — операция отменёна, чтобы не уничтожить исходные данные.",
+            args.source
+        ).into());
+    }
+
     let source_dir = Path::new(&args.source).canonicalize()?;
     let target_dir = Path::new(&args.target);
+
+    if let Ok(canonical_target) = target_dir.canonicalize() {
+        if source_dir == canonical_target {
+            return Err(format!(
+                "после канонизации source и target совпадают ({}) — операция отменёна, чтобы не уничтожить исходные данные.",
+                source_dir.display()
+            ).into());
+        }
+    }
 
     let mut files: Vec<String> = Vec::new();
     go_to_dir(source_dir.clone(), &source_dir, &mut files)?;
