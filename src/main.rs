@@ -2,7 +2,7 @@ mod manifest;
 mod file;
 mod hash;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::Path;
 use clap::Parser;
 use colour::yellow;
@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut files: Vec<String> = Vec::new();
     go_to_dir(source_dir.clone(), &source_dir, &mut files)?;
 
-    let mut sources_manifest: HashMap<String, String> = HashMap::new();
+    let mut sources_manifest: BTreeMap<String, String> = BTreeMap::new();
     for file in &files {
         let source_file_path = source_dir.join(file);
         let hash = compute_file_hash(&source_file_path)?;

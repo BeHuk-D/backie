@@ -1,5 +1,5 @@
 use std::{fs, io};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use colour::{green, yellow};
 
@@ -52,7 +52,7 @@ pub fn go_to_dir(current_dir: PathBuf, source_root: &Path, sources: &mut Vec<Str
     Ok(())
 }
 
-pub fn copy_files(target_manifest:  Option<HashMap<String, String>>, sources_manifest: &HashMap<String, String>, source_dir: &Path, target_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+pub fn copy_files(target_manifest:  Option<BTreeMap<String, String>>, sources_manifest: &BTreeMap<String, String>, source_dir: &Path, target_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     match target_manifest {
         Some(old_manifest) => {
             for (relative_path, file_hash) in sources_manifest {
