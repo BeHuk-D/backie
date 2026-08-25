@@ -33,6 +33,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let source_dir = Path::new(&args.source).canonicalize()?;
     let target_dir = Path::new(&args.target);
 
+    if !source_dir.is_dir() {
+        return Err(format!(
+            "source ({}) не является директорией.",
+            source_dir.display()
+        ).into());
+    }
+
     if let Ok(canonical_target) = target_dir.canonicalize() {
         if source_dir == canonical_target {
             return Err(format!(
