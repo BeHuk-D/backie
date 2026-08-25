@@ -23,7 +23,9 @@ pub fn extract_manifest(target_dir: &Path) -> Result<Option<BTreeMap<String, Str
 
 pub fn save_manifest_json(map: &BTreeMap<String, String>, path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let json = serde_json::to_string_pretty(map)?;
-    fs::write(path, json)?;
+    let tmp_path = path.with_extension("json.tmp");
+    fs::write(&tmp_path, json)?;
+    fs::rename(&tmp_path, path)?;
     Ok(())
 }
 
