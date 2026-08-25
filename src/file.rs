@@ -3,6 +3,21 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use colour::{green, yellow};
 
+fn format_bytes(n: u64) -> String {
+    const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB"];
+    let mut size = n as f64;
+    let mut idx = 0;
+    while size >= 1024.0 && idx < UNITS.len() - 1 {
+        size /= 1024.0;
+        idx += 1;
+    }
+    if idx == 0 {
+        format!("{} {}", n, UNITS[0])
+    } else {
+        format!("{:.1} {}", size, UNITS[idx])
+    }
+}
+
 pub fn clear_dir(path: &Path) -> io::Result<()> {
     if path.exists() {
         fs::remove_dir_all(path)?;
@@ -28,9 +43,12 @@ pub fn move_files(source_dir: &Path, target_dir: &Path) -> Result<usize, Box<dyn
         }
 
         let source_path = source_dir.join(relative_path);
+        let size = fs::metadata(&source_path)
+            .map_err(|e| format!("не удалось прочитать размер {}: {}", source_path.display(), e))?
+            .len();
         fs::copy(&source_path, &target_path)?;
         copied += 1;
-        green!("[FILES] "); println!("Копирование: {}", relative_path);
+        green!("[FILES] "); println!("Копирование: {} ({})", relative_path, format_bytes(size));
     }
 
     Ok(copied)
@@ -74,9 +92,12 @@ pub fn copy_files(target_manifest:  Option<BTreeMap<String, String>>, sources_ma
                     }
 
                     let source_path = source_dir.join(relative_path);
+                    let size = fs::metadata(&source_path)
+                        .map_err(|e| format!("не удалось прочитать размер {}: {}", source_path.display(), e))?
+                        .len();
                     fs::copy(&source_path, &target_path)?;
                     copied += 1;
-                    green!("[FILES] "); println!("Скопирован: {}", relative_path);
+                    green!("[FILES] "); println!("Скопирован: {} ({})", relative_path, format_bytes(size));
                 }
                 else {
                     skipped += 1;
