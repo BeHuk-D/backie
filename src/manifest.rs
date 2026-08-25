@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
+use colour::yellow;
 
 pub fn create_manifest(sources_manifest: &BTreeMap<String, String>, target_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let manifest_path = target_dir.join("manifest.json");
@@ -11,6 +12,12 @@ pub fn create_manifest(sources_manifest: &BTreeMap<String, String>, target_dir: 
 pub fn extract_manifest(target_dir: &Path) -> Result<Option<BTreeMap<String, String>>, Box<dyn std::error::Error>> {
     if !target_dir.exists() {
         return Ok(None);
+    }
+
+    let tmp_path = target_dir.join("manifest.json.tmp");
+    if tmp_path.exists() {
+        fs::remove_file(&tmp_path)?;
+        yellow!("[MANAGER] "); println!("Удалён остаточный manifest.json.tmp от прерванного прогона");
     }
 
     let manifest_path = target_dir.join("manifest.json");
