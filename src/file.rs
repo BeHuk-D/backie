@@ -17,6 +17,7 @@ pub fn move_files(source_dir: &Path, target_dir: &Path) -> Result<usize, Box<dyn
 
     let mut files = Vec::new();
     go_to_dir(source_dir.to_path_buf(), source_dir, &mut files)?;
+    files.sort();
 
     let mut copied = 0;
     for relative_path in &files {

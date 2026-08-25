@@ -51,6 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut files: Vec<String> = Vec::new();
     go_to_dir(source_dir.clone(), &source_dir, &mut files)?;
+    files.sort();
 
     let mut sources_manifest: BTreeMap<String, String> = BTreeMap::new();
     for file in &files {
