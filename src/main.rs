@@ -53,6 +53,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     go_to_dir(source_dir.clone(), &source_dir, &mut files)?;
     files.sort();
 
+    if files.is_empty() {
+        yellow!("[MANAGER] "); println!("Источник не содержит файлов — копировать нечего.");
+        let empty: BTreeMap<String, String> = BTreeMap::new();
+        create_manifest(&empty, target_dir)?;
+        return Ok(());
+    }
+
     let mut sources_manifest: BTreeMap<String, String> = BTreeMap::new();
     for file in &files {
         let source_file_path = source_dir.join(file);
