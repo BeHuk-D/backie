@@ -3,6 +3,11 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use colour::{green, yellow};
 
+/// Render a byte count as a short human-readable string with binary units.
+///
+/// Values below 1 KiB are rendered without decimals
+/// (e.g. `"100 B"`); larger values use one fractional digit
+/// (e.g. `"12.3 KB"`, `"2.9 MB"`).
 pub fn format_bytes(n: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB"];
     let mut size = n as f64;
@@ -18,6 +23,7 @@ pub fn format_bytes(n: u64) -> String {
     }
 }
 
+/// Recursively remove `path` if it exists. No-op when the path is absent.
 pub fn clear_dir(path: &Path) -> io::Result<()> {
     if path.exists() {
         fs::remove_dir_all(path)?;
@@ -25,6 +31,11 @@ pub fn clear_dir(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+/// Copy every file under `source_dir` into `target_dir`, preserving the
+/// relative layout. Creates `target_dir` (and any missing subdirectories)
+/// as needed. Files are visited in sorted order.
+///
+/// Returns the number of files copied and the total bytes transferred.
 pub fn move_files(source_dir: &Path, target_dir: &Path) -> Result<(usize, u64), Box<dyn std::error::Error>> {
     if !target_dir.exists() {
         fs::create_dir_all(target_dir)?;
@@ -56,6 +67,9 @@ pub fn move_files(source_dir: &Path, target_dir: &Path) -> Result<(usize, u64), 
     Ok((copied, total_bytes))
 }
 
+/// Walk `current_dir` recursively and append every regular file's path
+/// (relative to `source_root`) to `sources`. Files with paths that cannot
+/// be encoded as UTF-8 are silently skipped.
 pub fn go_to_dir(current_dir: PathBuf, source_root: &Path, sources: &mut Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
     for entry in fs::read_dir(current_dir)? {
         let entry = entry?;
@@ -75,6 +89,13 @@ pub fn go_to_dir(current_dir: PathBuf, source_root: &Path, sources: &mut Vec<Str
     Ok(())
 }
 
+/// Reconcile `target_dir` against `sources_manifest` using `target_manifest`
+/// as the previous state. When `target_manifest` is `Some`, only files whose
+/// hash differs from the previous manifest (or that are absent from it) are
+/// copied. When it is `None`, the target is wiped and re-populated from
+/// scratch via [`move_files`].
+///
+/// Returns `(copied, skipped, total_bytes_copied)`.
 pub fn copy_files(target_manifest:  Option<BTreeMap<String, String>>, sources_manifest: &BTreeMap<String, String>, source_dir: &Path, target_dir: &Path) -> Result<(usize, usize, u64), Box<dyn std::error::Error>> {
     match target_manifest {
         Some(old_manifest) => {

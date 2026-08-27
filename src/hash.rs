@@ -4,6 +4,10 @@ use std::path::Path;
 use sha2::{Digest, Sha256};
 use sha2::digest::Output;
 
+/// Compute the SHA-256 digest of the file at `file_path`. Reads the file
+/// in 8 KiB chunks and returns the raw digest output (callers typically
+/// hex-encode it for storage). Errors from `File::open` and `read` are
+/// wrapped with the file path so the caller can see which file failed.
 pub fn compute_file_hash(file_path: &Path) -> Result<Output<Sha256>, Box<dyn std::error::Error>> {
     let mut file = fs::File::open(file_path)
         .map_err(|e| format!("не удалось открыть {}: {}", file_path.display(), e))?;
