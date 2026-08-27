@@ -47,6 +47,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 source_dir.display()
             ).into());
         }
+        if !canonical_target.is_dir() {
+            return Err(format!(
+                "target ({}) существует, но не является директорией.",
+                canonical_target.display()
+            ).into());
+        }
     }
 
     let mut files: Vec<String> = Vec::new();
