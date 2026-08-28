@@ -75,12 +75,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let target_manifest = extract_manifest(target_dir)?;
 
-    let (copied, skipped, total_bytes) = copy_files(target_manifest, &sources_manifest, &source_dir, target_dir)?;
+    let (copied, skipped, total_bytes, skipped_bytes) = copy_files(target_manifest, &sources_manifest, &source_dir, target_dir)?;
 
     let pruned = prune_stale_files(target_dir, &sources_manifest)?;
 
     create_manifest(&sources_manifest, target_dir)?;
-    yellow!("[MANAGER] "); println!("Скопировано: {} ({}), пропущено: {}, удалено: {}", copied, format_bytes(total_bytes), skipped, pruned);
+    yellow!("[MANAGER] "); println!("Скопировано: {} ({}), пропущено: {} ({}), удалено: {}", copied, format_bytes(total_bytes), skipped, format_bytes(skipped_bytes), pruned);
     yellow!("[MANAGER] "); println!("Манифест сохранён в {}", target_dir.join("manifest.json").display());
 
     Ok(())

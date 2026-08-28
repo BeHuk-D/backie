@@ -95,18 +95,24 @@ pub fn go_to_dir(current_dir: PathBuf, source_root: &Path, sources: &mut Vec<Str
 /// copied. When it is `None`, the target is wiped and re-populated from
 /// scratch via [`move_files`].
 ///
-/// Returns `(copied, skipped, total_bytes_copied)`.
-pub fn copy_files(target_manifest:  Option<BTreeMap<String, String>>, sources_manifest: &BTreeMap<String, String>, source_dir: &Path, target_dir: &Path) -> Result<(usize, usize, u64), Box<dyn std::error::Error>> {
+/// Returns `(copied, skipped, total_bytes_copied, total_bytes_skipped)`.
+pub fn copy_files(target_manifest:  Option<BTreeMap<String, String>>, sources_manifest: &BTreeMap<String, String>, source_dir: &Path, target_dir: &Path) -> Result<(usize, usize, u64, u64), Box<dyn std::error::Error>> {
     match target_manifest {
         Some(old_manifest) => {
             let mut copied = 0;
             let mut skipped = 0;
             let mut total_bytes: u64 = 0;
+            let mut skipped_bytes: u64 = 0;
             for (relative_path, file_hash) in sources_manifest {
                 let need_copy = match old_manifest.get(relative_path) {
                     Some(old_hash) => old_hash != file_hash,
                     None => true,
                 };
+
+                let source_path = source_dir.join(relative_path);
+                let size = fs::metadata(&source_path)
+                    .map_err(|e| format!("не удалось прочитать размер {}: {}", source_path.display(), e))?
+                    .len();
 
                 if need_copy {
                     let target_path = target_dir.join(relative_path);
@@ -115,10 +121,6 @@ pub fn copy_files(target_manifest:  Option<BTreeMap<String, String>>, sources_ma
                         fs::create_dir_all(parent)?;
                     }
 
-                    let source_path = source_dir.join(relative_path);
-                    let size = fs::metadata(&source_path)
-                        .map_err(|e| format!("не удалось прочитать размер {}: {}", source_path.display(), e))?
-                        .len();
                     fs::copy(&source_path, &target_path)?;
                     copied += 1;
                     total_bytes += size;
@@ -126,16 +128,17 @@ pub fn copy_files(target_manifest:  Option<BTreeMap<String, String>>, sources_ma
                 }
                 else {
                     skipped += 1;
+                    skipped_bytes += size;
                     yellow!("[MANAGER] "); println!("Копирование не требуется");
                 }
             }
-            Ok((copied, skipped, total_bytes))
+            Ok((copied, skipped, total_bytes, skipped_bytes))
         }
         None => {
             yellow!("[MANAGER] "); println!("Копируем все файлы...");
             clear_dir(target_dir)?;
             let (copied, total_bytes) = move_files(source_dir, target_dir)?;
-            Ok((copied, 0, total_bytes))
+            Ok((copied, 0, total_bytes, 0))
         }
     }
 }
