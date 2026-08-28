@@ -139,3 +139,47 @@ pub fn copy_files(target_manifest:  Option<BTreeMap<String, String>>, sources_ma
         }
     }
 }
+
+/// Walk `target_dir` recursively and remove every file whose relative
+/// path is not a key in `sources_manifest`. `manifest.json` itself is
+/// always preserved. Returns the number of files removed.
+pub fn prune_stale_files(target_dir: &Path, sources_manifest: &BTreeMap<String, String>) -> Result<usize, Box<dyn std::error::Error>> {
+    if !target_dir.exists() {
+        return Ok(0);
+    }
+
+    let mut to_remove: Vec<PathBuf> = Vec::new();
+    let mut stack: Vec<PathBuf> = vec![target_dir.to_path_buf()];
+
+    while let Some(dir) = stack.pop() {
+        for entry in fs::read_dir(&dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            let file_name = entry.file_name();
+
+            if dir == target_dir && file_name == "manifest.json" {
+                continue;
+            }
+
+            if path.is_dir() {
+                stack.push(path);
+            } else if path.is_file() {
+                if let Ok(relative) = path.strip_prefix(target_dir) {
+                    if let Some(rel_str) = relative.to_str() {
+                        if !sources_manifest.contains_key(rel_str) {
+                            to_remove.push(path);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let count = to_remove.len();
+    for path in &to_remove {
+        let relative = path.strip_prefix(target_dir).unwrap_or(path);
+        yellow!("[MANAGER] "); println!("Удалён устаревший: {}", relative.display());
+        fs::remove_file(path)?;
+    }
+    Ok(count)
+}

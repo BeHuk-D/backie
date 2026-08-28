@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use clap::Parser;
 use colour::yellow;
-use crate::file::{copy_files, format_bytes, go_to_dir};
+use crate::file::{copy_files, format_bytes, go_to_dir, prune_stale_files};
 use crate::hash::compute_file_hash;
 use crate::manifest::{create_manifest, extract_manifest};
 
@@ -77,8 +77,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (copied, skipped, total_bytes) = copy_files(target_manifest, &sources_manifest, &source_dir, target_dir)?;
 
+    let pruned = prune_stale_files(target_dir, &sources_manifest)?;
+
     create_manifest(&sources_manifest, target_dir)?;
-    yellow!("[MANAGER] "); println!("Скопировано: {} ({}), пропущено: {}", copied, format_bytes(total_bytes), skipped);
+    yellow!("[MANAGER] "); println!("Скопировано: {} ({}), пропущено: {}, удалено: {}", copied, format_bytes(total_bytes), skipped, pruned);
     yellow!("[MANAGER] "); println!("Манифест сохранён в {}", target_dir.join("manifest.json").display());
 
     Ok(())
