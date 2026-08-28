@@ -11,12 +11,19 @@ use crate::hash::compute_file_hash;
 use crate::manifest::{create_manifest, extract_manifest};
 
 #[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
+#[command(
+    version,
+    about = "Инкрементальное резервное копирование каталогов",
+    long_about = "backie копирует файлы из SOURCE в TARGET, обновляя только те,\n\
+                  что изменились с прошлого запуска (определяется по SHA-256).\n\
+                  Старый манифест хранится в TARGET/manifest.json; файлы,\n\
+                  удалённые из SOURCE, тоже подчищаются из TARGET."
+)]
 struct Args {
-    #[arg(short, long)]
+    #[arg(short, long, value_name = "DIR")]
     source: String,
 
-    #[arg(short, long)]
+    #[arg(short, long, value_name = "DIR")]
     target: String,
 }
 
